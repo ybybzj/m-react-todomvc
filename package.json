@@ -1,0 +1,28 @@
+{
+  "name": "m-react-todomvc",
+  "version": "0.1.0",
+  "description": "m-react todomvc example",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify-middleware": "^6.0.0",
+    "bundle-collapser": "^1.2.0",
+    "compression": "^1.5.0",
+    "express": "^4.13.0",
+    "fnkit": "git://github.com/ybybzj/fnkit.git#master",
+    "m-react": "git://github.com/ybybzj/m-react.git#master",
+    "m-react-mixins": "git://github.com/ybybzj/m-react-mixins.git#master",
+    "mithrilify": "0.0.4",
+    "morgan": "^1.6.0",
+    "page": "^1.6.3",
+    "s-flow": "git://github.com/ybybzj/s-flow.git#master",
+    "todomvc-app-css": "^2.0.1",
+    "todomvc-common": "^1.0.2",
+    "typology": "^1.0.0"
+  }
+}

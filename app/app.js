@@ -1,7 +1,7 @@
 var router = require('page');
 var Page = require('./page.msx');
 var SF = require('s-flow');
-var m = mReact;
+var m = require('m-react');
 var app = SF({
   state: require('./state'),
   signal: require('./signal'),

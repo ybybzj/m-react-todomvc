@@ -1,4 +1,4 @@
-var m = mReact;
+var m = require('m-react');
 var sfMixin = require('m-react-mixins/s-flow');
 function createPageComponent(options){
   options.mixins =  options.mixins || [];

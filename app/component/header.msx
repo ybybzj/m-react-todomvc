@@ -1,4 +1,4 @@
-var m = mReact;
+var m = require('m-react');
 var ESCAPE_KEY = 27;
 var ENTER_KEY = 13;
 module.exports = m.createComponent({

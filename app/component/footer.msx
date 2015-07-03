@@ -1,4 +1,4 @@
-var m = mReact;
+var m = require('m-react');
 var cx = require('../utils').classNames;
 var Footer = m.createComponent({
   render: function(props){

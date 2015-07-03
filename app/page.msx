@@ -1,4 +1,4 @@
-var m = mReact;
+var m = require('m-react');
 var createPage = require('./createPageComponent');
 var TodoItem = require('./component/todoItem.msx');
 var TodoFooter = require('./component/footer.msx');

@@ -1,6 +1,6 @@
 mReact TodoMVC example
 =====
-
+There are some modules I depend on to build the example. You can checkout the package.json file.
 
 Usage
 ===

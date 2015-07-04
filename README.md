@@ -4,8 +4,8 @@ There are some modules I depend on to build the example. You can checkout the pa
 
 Usage
 ===
-```javascript
-npm install;
-node server.js
+```
+npm install
+npm start
 //then open http://127.0.0.1:3000 in browser
 ```

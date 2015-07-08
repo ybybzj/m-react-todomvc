@@ -1,11 +1,12 @@
 {
   "name": "m-react-todomvc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "m-react todomvc example",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": ""
   },
   "author": "",
   "license": "ISC",
@@ -24,5 +25,13 @@
     "todomvc-app-css": "^2.0.1",
     "todomvc-common": "^1.0.2",
     "typology": "^1.0.0"
+  },
+  "devDependencies": {
+    "browserify": "^10.2.4",
+    "bundle-collapser": "^1.2.0",
+    "gulp": "^3.9.0",
+    "rimraf": "^2.4.1",
+    "run-sequence": "^1.1.1",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

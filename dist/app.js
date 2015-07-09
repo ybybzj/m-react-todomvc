@@ -77,6 +77,14 @@ var m = require("m-react");
 var ESCAPE_KEY = 27;
 var ENTER_KEY = 13;
 module.exports = m.createComponent({
+  getInitialState: function(){
+    return {
+      text: ''
+    };
+  },
+  // componentWillReceiveProps: function(){
+  //   console.log('Header Component');
+  // },
   render: function(){
     return (
       {tag: "header", attrs: {id:"header", class:"header"}, children: [
@@ -84,21 +92,24 @@ module.exports = m.createComponent({
         {tag: "input", attrs: {
           id:"new-todo", 
           class:"new-todo", 
+          value:this.state.text, 
           placeholder:"What needs to be done?", 
-          evKeyDown:this.onHandleNewTodoKeyDown, 
+          evKeyUp:this.onHandleNewTodoKeyUp, 
           autoFocus:true}
         }
       ]}
     );
   },
-  onHandleNewTodoKeyDown: function(e){
+  onHandleNewTodoKeyUp: function(e){
     var val = e.target.value.trim();
-    if(event.which === ESCAPE_KEY){
-      e.target.value = null;
-    }else if(event.which === ENTER_KEY && val !== ''){
+    if(e.which === ESCAPE_KEY){
+      this.setState({text: ''});
+    }else if(e.which === ENTER_KEY && val !== ''){
       if(this.props.onTodoCreated)
           this.props.onTodoCreated({val: val});
-      e.target.value = null;
+      this.setState({text: ''});
+    }else{
+      this.setState({text: val});
     }
   },
 });

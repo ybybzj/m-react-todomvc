@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": ""
+    "build": "gulp"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +21,7 @@
     "mithrilify": "0.0.4",
     "morgan": "^1.6.0",
     "page": "^1.6.3",
-    "s-flow": "git://github.com/ybybzj/s-flow.git#master",
+    "r-stream": "git://github.com/ybybzj/r-stream.git",
     "todomvc-app-css": "^2.0.1",
     "todomvc-common": "^1.0.2",
     "typology": "^1.0.0"

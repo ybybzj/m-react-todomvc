@@ -9,6 +9,7 @@ Usage
 ===
 ```
 npm install
+npm build
 npm start
 //then open http://127.0.0.1:3000 in browser
 ```

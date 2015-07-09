@@ -1,25 +1,35 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var router = require("page");
-var Page = require(6);
-var SF = require("s-flow");
+var Page = require(5);
 var m = require("m-react");
-var app = SF({
-  state: require(8),
-  signal: require(7),
-  watch: require(9)
+var signal = require(6);
+var updates = require(8);
+var store = require(7);
+var rootEl = document.getElementById('todoapp');
+updates(function(sig, handler){
+  signal[sig].on(handler);
 });
 
-app.init();
-m.mount(document.getElementById('todoapp'), m.component(Page, {sf:app}));
+// var app = SF({
+//   state: require('./state'),
+//   signal: require('./signal'),
+//   watch: require('./update')
+// });
+
+store.onUpdate(function(){
+  m.render(document.getElementById('todoapp'), Page);
+})
+m.render(rootEl, Page);
+
 router('/:filter?', function(cxt){
   var filter = cxt.params.filter;
   filter = filter == null ? 'all': filter.trim() == '' ? 'all': filter.trim();
-  app.signal.getEmitter('filterChanged')(filter);
+  signal.filterChanged(filter);
 });
 router();
-},{"6":6,"7":7,"8":8,"9":9,"m-react":"m-react","page":"page","s-flow":"s-flow"}],2:[function(require,module,exports){
+},{"5":5,"6":6,"7":7,"8":8,"m-react":"m-react","page":"page"}],2:[function(require,module,exports){
 var m = require("m-react");
-var cx = require(10).classNames;
+var cx = require(9).classNames;
 var Footer = m.createComponent({
   render: function(props){
     var activeTodoWord = props.count > 1 ? 'items' : 'item';
@@ -72,7 +82,7 @@ var Footer = m.createComponent({
 });
 
 module.exports = Footer;
-},{"10":10,"m-react":"m-react"}],3:[function(require,module,exports){
+},{"9":9,"m-react":"m-react"}],3:[function(require,module,exports){
 var m = require("m-react");
 var ESCAPE_KEY = 27;
 var ENTER_KEY = 13;
@@ -115,7 +125,7 @@ module.exports = m.createComponent({
 });
 },{"m-react":"m-react"}],4:[function(require,module,exports){
 var m = require("m-react");
-var _ = require(10);
+var _ = require(9);
 var ESCAPE_KEY = 27;
 var ENTER_KEY = 13;
 var TodoItem = m.createComponent({
@@ -225,75 +235,45 @@ var TodoItem = m.createComponent({
 });
 
 module.exports = TodoItem;
-},{"10":10,"m-react":"m-react"}],5:[function(require,module,exports){
+},{"9":9,"m-react":"m-react"}],5:[function(require,module,exports){
 var m = require("m-react");
-var sfMixin = require(16);
-function createPageComponent(options){
-  options.mixins =  options.mixins || [];
-  options.mixins = [].concat(options.mixins);
-  options.mixins.push(sfMixin());
-  return m.createComponent(options);
-}
-module.exports = createPageComponent;
-},{"16":16,"m-react":"m-react"}],6:[function(require,module,exports){
-var m = require("m-react");
-var createPage = require(5);
+// var createPage = require('./createPageComponent');
 var TodoItem = require(4);
 var TodoFooter = require(2);
 var TodoHeader = require(3);
 var page = require("page");
-
-var App = createPage({
-  signals:[
-    'filterChanged',
-    'completedCleared',
-    'allToggled',
-    'todoToggled',
-    'todoEdited',
-    'todoDestroyed',
-    'todoSaved',
-    'todoCanceled',
-    'todoCreated'
-    ],
-  facets:{
-    shownTodos: 'showingTodos',
-    activeTodoCount: 'activeTodoCount',
-    completedCount: 'completedCount'
-  },
-  cursors:{
-    filter: 'filter'
-  },
-  // getInitialState: function(){
-  //   return {editText:''};
-  // },
+var store = require(7);
+var signals = require(6);
+var App = m.createComponent({
   render: function () {
     var footer;
     var main;
-    var todos = this.state.todos;
-
-
-    var todoItems = this.state.shownTodos.map(function (todo) {
+    var todos = store.allTodos,
+        activeTodoCount = store.activeTodoCount(),
+        completedCount = store.completedCount(),
+        filter = store.filter();
+    var todoItems = store.shownTodos().map(function (todo) {
       return (
         m.component(TodoItem, {
           key:todo.id, 
           todo:todo, 
-          onToggle:this.signals.todoToggled, 
-          onDestroy:this.signals.todoDestroyed, 
-          onEdit:this.signals.todoEdited, 
-          onSave:this.signals.todoSaved, 
-          onCancel:this.signals.todoCanceled}
+          onToggle:signals.todoToggled, 
+          onDestroy:signals.todoDestroyed, 
+          onEdit:signals.todoEdited, 
+          onSave:signals.todoSaved, 
+          onCancel:signals.todoCanceled}
         )
       );
     }, this);
 
 
-    if (this.state.activeTodoCount || this.state.completedCount) {
+    if (activeTodoCount || completedCount) {
       footer =
         m.component(TodoFooter, {
-          count:this.state.activeTodoCount, 
-          completedCount:this.state.completedCount, 
-          filter:this.state.filter, 
-          onClearCompleted:this.signals.completedCleared}
+          count:activeTodoCount, 
+          completedCount:completedCount, 
+          filter:filter, 
+          onClearCompleted:signals.completedCleared}
         );
     }
 
@@ -305,7 +285,7 @@ var App = createPage({
             class:"toggle-all", 
             type:"checkbox", 
             evChange:this.onToggleAll, 
-            checked:this.state.activeTodoCount === 0}
+            checked:activeTodoCount === 0}
           }, 
           {tag: "ul", attrs: {id:"todo-list", class:"todo-list"}, children: [
             todoItems
@@ -317,7 +297,7 @@ var App = createPage({
     return (
       {tag: "div", attrs: {}, children: [
         m.component(TodoHeader, {
-          onTodoCreated:this.signals.todoCreated}
+          onTodoCreated:signals.todoCreated}
         ), 
         main, 
         footer
@@ -327,39 +307,54 @@ var App = createPage({
   
   onToggleAll: function(e){
     var completed = e.target.checked;
-    this.signals.allToggled(!!completed);
+    signals.allToggled(!!completed);
   }
 });
 module.exports = App;
-},{"2":2,"3":3,"4":4,"5":5,"m-react":"m-react","page":"page"}],7:[function(require,module,exports){
-module.exports = function(signal){
-  signal.add('filterChanged')
-    .add('completedCleared')
-    .add('allToggled')
-    .add('todoToggled')
-    .add('todoEdited')
-    .add('todoDestroyed')
-    .add('todoSaved')
-    .add('todoCanceled')
-    .add('todoCreated');
-};
-},{}],8:[function(require,module,exports){
+},{"2":2,"3":3,"4":4,"6":6,"7":7,"m-react":"m-react","page":"page"}],6:[function(require,module,exports){
+// module.exports = function(signal){
+//   signal.add('filterChanged')
+//     .add('completedCleared')
+//     .add('allToggled')
+//     .add('todoToggled')
+//     .add('todoEdited')
+//     .add('todoDestroyed')
+//     .add('todoSaved')
+//     .add('todoCanceled')
+//     .add('todoCreated');
+// };
+var r$ = require("r-stream");
 module.exports = {
-  data: {
-    todos: {},
-    index:[],
-    filter: 'all'
+  filterChanged: r$(),
+  completedCleared: r$(),
+  allToggled: r$(),
+  todoToggled: r$(),
+  todoEdited: r$(),
+  todoDestroyed: r$(),
+  todoSaved: r$(),
+  todoCanceled: r$(),
+  todoCreated: r$()
+};
+},{"r-stream":"r-stream"}],7:[function(require,module,exports){
+var bSearch = require(9).bSearch;
+var store = {
+  todos:[],
+  filter: 'all',
+  nextId: 0
+};
+
+module.exports = {
+  filter: function (){
+    if(arguments.length === 0){
+      return store.filter;
+    }else{
+      store.filter = arguments[0];
+      this.triggerUpdate();
+    }
   },
-  facets: {
-    showingTodos: {
-      cursors: {
-        todos: 'todos',
-        index: 'index',
-        filter: 'filter'
-      },
-      get: function(data) {
-        return values(data.todos, data.index).filter(function(item) {
-          switch (data.filter) {
+  shownTodos: function(){
+    return store.todos.filter(function(item) {
+          switch (store.filter) {
             case 'active':
               return !item.completed;
             case 'completed':
@@ -368,48 +363,75 @@ module.exports = {
               return true;
           }
         });
-      }
-    },
-    completedCount: {
-      cursors: {
-        todos: 'todos',
-        index: 'index'
-      },
-      get: function(data) {
-        return values(data.todos, data.index).reduce(function(accum, todo) {
+  },
+  completedCount: function(){
+    return store.todos.reduce(function(accum, todo) {
           return !todo.completed ? accum : accum + 1;
         }, 0);
+  },
+  activeTodoCount: function(){
+    return store.todos.length - this.completedCount();
+  },
+  allTodos: function(){
+    return store.todos;
+  },
+  updateTodo: function(id, update){
+    var todoIdx = bSearch(store.todos, id, _compare);
+    _update(store.todos[todoIdx], update);
+    this.triggerUpdate();
+  },
+  updateTodos: function(update){
+    store.todos.forEach(_update.bind(null, update));
+    this.triggerUpdate();
+  },
+  newTodo: function(title){
+    var newTodo = {
+      title: title,
+      status: 'created'
+    };
+  
+    newTodo.id = store.nextId;
+    store.todos.unshift(newTodo);
+    store.nextId++;
+    this.triggerUpdate();
+  },
+  destroyTodo: function(id){
+    var todoIdx = bSearch(store.todos, id, _compare);
+    if(todoIdx !== -1){
+      store.todos.splice(todoIdx, 1);
+    }
+    this.triggerUpdate();
+  },
+  triggerUpdate: function(){
+    var self = this;
+    if(typeof this._onUpdate === 'function'){
+      if(this._timer){
+        clearTimeout(this._timer);
       }
-    },
-    activeTodoCount: {
-      cursors: {
-        todos: 'todos',
-        index: 'index'
-      },
-      get: function(data) {
-        return values(data.todos, data.index).reduce(function(accum, todo) {
-          return todo.completed ? accum : accum + 1;
-        }, 0);
-      }
+      this._timer = setTimeout(function(){
+        self._onUpdate();
+        self._timer = null;
+      }, 16);
+      
     }
   },
-  refs:{
-    todos: 'todos'
-  },
-  options: {
-    syncwrite: true
+  onUpdate: function(fn){
+    this._onUpdate = fn;
   }
 };
 
-function values(obj, index){
-  var result = [];
-  for(var i= 0, l = index.length; i < l; i++){
-    result.push(obj[index[i]]);
-  }
-  return result;
+function _compare(targetId, todo){
+  return todo.id - targetId;
 }
-},{}],9:[function(require,module,exports){
-var curry = require(11);
+function _update(updates, todo){
+  Object.keys(updates).forEach(function(k){
+    todo[k] = updates[k];
+  });
+  return todo;
+}
+},{"9":9}],8:[function(require,module,exports){
+var curry = require(10);
+var store = require(7);
 module.exports = function(watch){
   watch('todoToggled', _updateTodo({
     completed: function(c){return !c;},
@@ -441,58 +463,33 @@ module.exports = function(watch){
 
 //updates
 
-function onTodoDestroyed(store, refs, data){
-  var ref = refs.todos.get(data.id),
-      indexes = store.get('index');
-  refs.todos.remove(ref);
-  store.unset(['todos', ref]);
-  store.splice('index', [indexes.indexOf(ref), 1]);
+function onTodoDestroyed(data){
+  store.destroyTodo(data.id);
 }
 
-function onTodoCreated(store, refs, data){
-  var newTodo = {
-    title: data.val,
-    status: 'created'
-  };
-  var newRef =  refs.todos.create(),
-      newId = newRef;
-  refs.todos.update(newRef, newId);
-  newTodo.id = newId;
-  store.set(['todos', newRef], newTodo);
-  store.unshift('index', newRef);
+function onTodoCreated(data){
+  store.newTodo(data.val);
 }
 
-function onFilterChanged(store, _, filter){
-  store.set('filter', filter);
+function onFilterChanged(filter){
+  store.filter(filter);
 }
 
 //helpers
-var _updateTodo = curry(3, function _updateTodo(update, store, refs, data){
-  var ref = refs.todos.get(data.id),
-      cursor = store.select('todos');
+var _updateTodo = curry(2, function _updateTodo(update, data){
   if(typeof update === 'function'){
     update = update(data);
   }
-  Object.keys(update).forEach(function(k){
-    var val = update[k];
-    if(typeof val === 'function'){
-      val = val(cursor.get([ref,k]));
-    }
-    cursor.set([ref, k], val);
-  });
+  store.updateTodo(data.id, update);
 });
 
-var _updateTodos = curry(3, function _updateTodos(update, store, _, data){
-  var index = store.get('index'),
-      cursor = store.select('todos');
+var _updateTodos = curry(2, function _updateTodos(update, data){
   if(typeof update === 'function'){
     update = update(data);
   }
-  index.forEach(function(ref){
-    cursor.merge(ref, update);
-  });
+  store.updateTodos(update);
 });
-},{"11":11}],10:[function(require,module,exports){
+},{"10":10,"7":7}],9:[function(require,module,exports){
 function classNames(classes) {
   var cs = '';
   for (var i in classes) {
@@ -500,12 +497,50 @@ function classNames(classes) {
   }
   return cs.trim();
 }
+/**
+ * [bSearch description]
+ * @param  {[Array]} arr    sorted array
+ * @param  {[Any]} target   [description]
+ * @param  {[Function]} compareFn(target, item){} return -1, 0, 1
+ * @return {[Integer]}           index in arr
+ */
+function bSearch(arr, target, compareFn){
+  if(arr.length === 0) return -1;
+  return _rBSearch(arr, target, compareFn, 0, arr.length - 1);
+}
+
+function _rBSearch(arr, target, compareFn, startIdx, endIdx){
+  if(startIdx < 0 || endIdx < 0){
+    throw new Error('[bSearch]Invalid index arguments!given: s=>' + startIdx + ', e=>' + endIdx);
+  }
+  if(startIdx > endIdx) return -1;
+  var midIdx = Math.floor((endIdx - startIdx)/2) + startIdx,
+      startComResult, midComResult, endComResult, resultIdx = -1;
+  startComResult = compareFn(target, arr[startIdx]);
+  endComResult = compareFn(target, arr[endIdx]);
+  resultIdx = startComResult === 0 ? startIdx:
+        endComResult === 0 ? endIdx : -1;
+  if(resultIdx === -1){
+    if(startIdx === endIdx || midIdx === startIdx){ return resultIdx; }
+    midComResult = compareFn(target, arr[midIdx]);
+    if(midComResult === 0){
+      resultIdx = midIdx;
+    }else if(midComResult < 0){
+      resultIdx = _rBSearch(arr, target, compareFn, startIdx + 1, midIdx - 1);
+    }else if(midComResult > 0){
+      resultIdx = _rBSearch(arr, target, compareFn, midIdx + 1, endIdx - 1);
+    }
+  }
+  return resultIdx;
+}
+
 module.exports = {
-  classNames: classNames
+  classNames: classNames,
+  bSearch: bSearch
 };
-},{}],11:[function(require,module,exports){
-var __ = require(12);
-var slice = require(13);
+},{}],10:[function(require,module,exports){
+var __ = require(11);
+var slice = require(12);
 
 function curry(arity, fn) {
   switch (arguments.length) {
@@ -563,9 +598,9 @@ module.exports = curry;
 //   var curried = curry(2,fn)(3);
 //   console.log(curried(2,3,6,9));
 // }
-},{"12":12,"13":13}],12:[function(require,module,exports){
+},{"11":11,"12":12}],11:[function(require,module,exports){
 module.exports = Object.create(null);
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 //brorrowed from lamda$_slice
 module.exports = function slice(args, from, to){
   switch(arguments.length){
@@ -581,107 +616,4 @@ module.exports = function slice(args, from, to){
       return list;
   }
 };
-},{}],14:[function(require,module,exports){
-var shadowEqual = require(15);
-module.exports = function() {
-  return {
-    shouldComponentUpdate: function(oldProps, oldState) {
-      return !shadowEqual(this.state, oldState) || !shadowEqual(this.props, oldProps, true);
-    }
-  };
-};
-},{"15":15}],15:[function(require,module,exports){
-module.exports = function(objA, objB, checkChildren){
-  if(objA === objB){
-    return true;
-  }
-  if(typeof objA !== 'object' || objA == null || typeof objB !== 'object' || objB == null){
-    return false;
-  }
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
-  if(checkChildren){
-    keysA = _removeItem(keysA, 'children');
-    keysB = _removeItem(keysB, 'children');
-  }
- 
-  
-  if(keysA.length !== keysB.length){
-    return false;
-  }
-  var bHasOwn = Object.prototype.hasOwnProperty.bind(objB);
-  var key, i, l;
-  for(i = 0, l = keysA.length; i < l; i++){
-    key = keysA[i];
-    if(bHasOwn(keysA[i]) || objA[key] !== objB[key]){
-      return false;
-    }
-  }
-  if(checkChildren){
-    if(!Array.isArray(objA.children) || !Array.isArray(objB.children)
-      || objA.children.length !== objB.children.length) {
-      return false;
-    }
-  }
-  return true;
-};
-
-function _removeItem(a, item){
-  var idx = a.indexOf(item);
-  if(idx > -1) a.splice(idx, 1);
-  return a;
-}
-},{}],16:[function(require,module,exports){
-var pureRender = require(14);
-module.exports = function(){
-  return {
-    mixins:[pureRender()],
-    getInitialProps: function(props){
-      if(props && props.sf && props.sf.$type === '__$sf$__'){
-        props.sf.signal && this._setupSignals(props.sf);
-        props.sf.state  && this._setupFacets(props.sf);
-      }
-    },
-    getInitialState: function(){
-      if(this.__facets) return this.__facets.get();
-      return {};
-    },
-    _setupSignals: function(sf){
-      var signals = this.signals;
-      //setup signals
-      if(Array.isArray(signals) && signals.length){
-        this.signals = signals.reduce(function(m, name){
-          m[name] = sf.signal.getEmitter(name);
-          return m;
-        }, {});
-      }
-    },
-    _setupFacets: function(sf){
-      //setup facets
-      this.__facets = sf.state.store.createFacet({
-        cursors: this.cursors,
-        facets: this.facets
-      }, [this.props]);
-      this.cursors = this.__facets.cursors;
-      this.facets = this.__facets.facets;
-      
-      //listen to facets' "update" event
-      var handler = (function(){
-        this.setState(this.__facets.get());
-      }).bind(this);
-      this.__facets.on('update', handler);
-    },
-    componentWillUnmount: function(){
-      if(!this.__facets) return;
-      this.__facets.release();
-      this.__facets = null;
-    },
-    componentWillReceiveProps: function(props){
-      if(!this.__facets) return;
-      this.__facets.refresh([props]);
-      this.setState(this.__facets.get(), true);
-    }
-  };
-};
-
-},{"14":14}]},{},[1]);
+},{}]},{},[1]);

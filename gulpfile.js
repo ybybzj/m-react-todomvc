@@ -4,7 +4,7 @@ var gulp = require('gulp');
 var rm = require('rimraf');
 var runSequence = require('run-sequence');
 
-var externals = ['m-react', 'm-react-mixins', 'fnkit', 's-flow', 'page'];
+var externals = ['m-react', 'm-react-mixins','r-stream','fnkit', 'page'];
 
 function buildBundle(cfg){
   return browserify(cfg)

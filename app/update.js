@@ -1,4 +1,5 @@
 var curry = require('fnkit/curry');
+var store = require('./store');
 module.exports = function(watch){
   watch('todoToggled', _updateTodo({
     completed: function(c){return !c;},
@@ -30,54 +31,29 @@ module.exports = function(watch){
 
 //updates
 
-function onTodoDestroyed(store, refs, data){
-  var ref = refs.todos.get(data.id),
-      indexes = store.get('index');
-  refs.todos.remove(ref);
-  store.unset(['todos', ref]);
-  store.splice('index', [indexes.indexOf(ref), 1]);
+function onTodoDestroyed(data){
+  store.destroyTodo(data.id);
 }
 
-function onTodoCreated(store, refs, data){
-  var newTodo = {
-    title: data.val,
-    status: 'created'
-  };
-  var newRef =  refs.todos.create(),
-      newId = newRef;
-  refs.todos.update(newRef, newId);
-  newTodo.id = newId;
-  store.set(['todos', newRef], newTodo);
-  store.unshift('index', newRef);
+function onTodoCreated(data){
+  store.newTodo(data.val);
 }
 
-function onFilterChanged(store, _, filter){
-  store.set('filter', filter);
+function onFilterChanged(filter){
+  store.filter(filter);
 }
 
 //helpers
-var _updateTodo = curry(3, function _updateTodo(update, store, refs, data){
-  var ref = refs.todos.get(data.id),
-      cursor = store.select('todos');
+var _updateTodo = curry(2, function _updateTodo(update, data){
   if(typeof update === 'function'){
     update = update(data);
   }
-  Object.keys(update).forEach(function(k){
-    var val = update[k];
-    if(typeof val === 'function'){
-      val = val(cursor.get([ref,k]));
-    }
-    cursor.set([ref, k], val);
-  });
+  store.updateTodo(data.id, update);
 });
 
-var _updateTodos = curry(3, function _updateTodos(update, store, _, data){
-  var index = store.get('index'),
-      cursor = store.select('todos');
+var _updateTodos = curry(2, function _updateTodos(update, data){
   if(typeof update === 'function'){
     update = update(data);
   }
-  index.forEach(function(ref){
-    cursor.merge(ref, update);
-  });
+  store.updateTodos(update);
 });

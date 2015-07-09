@@ -1,18 +1,23 @@
 var router = require('page');
 var Page = require('./page.msx');
-var SF = require('s-flow');
 var m = require('m-react');
-var app = SF({
-  state: require('./state'),
-  signal: require('./signal'),
-  watch: require('./update')
+var signal = require('./signal');
+var updates = require('./update');
+var store = require('./store');
+var rootEl = document.getElementById('todoapp');
+updates(function(sig, handler){
+  signal[sig].on(handler);
 });
 
-app.init();
-m.mount(document.getElementById('todoapp'), <Page sf={app}/>);
+
+store.onUpdate(function(){
+  m.render(document.getElementById('todoapp'), <Page/>);
+})
+m.render(rootEl, <Page/>);
+
 router('/:filter?', function(cxt){
   var filter = cxt.params.filter;
   filter = filter == null ? 'all': filter.trim() == '' ? 'all': filter.trim();
-  app.signal.getEmitter('filterChanged')(filter);
+  signal.filterChanged(filter);
 });
 router();

@@ -1,11 +1,12 @@
-module.exports = function(signal){
-  signal.add('filterChanged')
-    .add('completedCleared')
-    .add('allToggled')
-    .add('todoToggled')
-    .add('todoEdited')
-    .add('todoDestroyed')
-    .add('todoSaved')
-    .add('todoCanceled')
-    .add('todoCreated');
+var r$ = require('r-stream');
+module.exports = {
+  filterChanged: r$(),
+  completedCleared: r$(),
+  allToggled: r$(),
+  todoToggled: r$(),
+  todoEdited: r$(),
+  todoDestroyed: r$(),
+  todoSaved: r$(),
+  todoCanceled: r$(),
+  todoCreated: r$()
 };
